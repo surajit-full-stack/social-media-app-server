@@ -1,0 +1,9 @@
+import express from 'express'
+import { editPost, getPost, postAdd} from '../controllers/post.js';
+import { varifyToken } from '../JWT.js';
+
+const router=express.Router();
+router.post("/add-post",varifyToken,postAdd)
+router.get("/get-post/:postId",varifyToken,getPost)
+router.post("/edit-post/:postId",varifyToken,editPost)
+export default router;

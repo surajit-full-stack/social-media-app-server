@@ -2,13 +2,15 @@ import { db } from "../db.js";
 import bcrypt from "bcrypt";
 import { createToken } from "../JWT.js";
 export const registerUser = (req, res) => {
+  console.log("req.body", req.body);
+
   const { password } = req.body;
   if (password.length < 5) {
     res.status(500).json({ msg: "password should be 5 character long" });
     return;
   }
   const querry =
-    "INSERT INTO Users (firstName,lastName,email,password,profilePicture) VALUES (?, ?, ?, ?, ?)";
+    "INSERT INTO Users (userName,password,profilePicture) VALUES (?, ?, ?)";
 
   // encrypt password
 
@@ -17,7 +19,7 @@ export const registerUser = (req, res) => {
       console.error("Error hashing the password:", err);
       res
         .status(500)
-        .json({ msg: "Password encryption failed. Plaese try again!" });
+        .json( "Password encryption failed. Plaese try again!" );
     } else {
       registerQuerry(querry, { ...req.body, hash }, res);
     }
@@ -25,36 +27,45 @@ export const registerUser = (req, res) => {
 };
 
 function registerQuerry(q, userData, res) {
-  const { firstName, lastName, email, profilePicture, hash } = userData;
-  db.query(
-    q,
-    [firstName, lastName, email, hash, profilePicture],
-    (err, data) => {
-      if (err) {
-        const error = { ...err };
-        if (err.code === "ER_DUP_ENTRY")
-          error.msg = "Email is already exist !!!";
-        res.status(500).json(error);
-        return;
-      }
-      res.status(200).json(data);
+  userData.userName=userData.userName.split(" ").join("")
+  userData.userName=userData.userName.split("/").join("")
+
+  const { userName, profilePicture, hash } = userData;
+  db.query(q, [userName, hash, profilePicture], (err, data) => {
+    console.log("data", data);
+    if (err) {
+      const error = { ...err };
+      if (err.code === "ER_DUP_ENTRY")
+        error.msg = "userName is already exist !!!";
+      res.status(400).json(error);
+      return;
     }
-  );
+    const user = {
+      userId: data.insertId,
+      userName,
+    };
+    const accessToken = createToken(user);
+    console.log("accessToken", accessToken);
+    res.cookie("access-token", accessToken, {
+      maxAge: 60 * 60 * 24 * 1000 * 7,
+    });
+    res.status(200).json({ ...user, profilePicture });
+  });
 }
 
 export const loginUser = (req, res) => {
   const { userName, password } = req.body;
 
   if (!userName | !password) {
-    res.status(500).json({ msg: "enter userId or password!" });
+    res.status(500).json( "enter userId or password!" );
     return;
   }
-  const q = "select userId,userName,password from Users where userName = ?";
+  const q = "select * from Users where userName = ?";
 
   db.query(q, [userName], (err, data) => {
     if (err) res.status(500).json(err);
     else if (data.length == 0)
-      res.status(404).json({ msg: "user  not found!" });
+      res.status(404).json( "user  not found!" );
     else {
       console.log("data", data);
       const hashed = data[0].password;
@@ -67,9 +78,12 @@ export const loginUser = (req, res) => {
             res.cookie("access-token", accessToken, {
               maxAge: 60 * 60 * 24 * 1000 * 7,
             });
-            res.status(200).json({ msg: "successfully logedin", accessToken });
+            const { password, ...rest } = data[0];
+            res
+              .status(200)
+              .json({  userData: rest });
           } else {
-            res.status(400).json({ msg: "Password is incorrect" });
+            res.status(400).json("Password is incorrect");
           }
         }
       });

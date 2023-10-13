@@ -2,6 +2,7 @@ import pkg from "jsonwebtoken";
 const { sign, verify } = pkg;
 
 export const createToken = (user) => {
+  console.log("user", user);
   const accessToken = sign(
     { userName: user.userName, id: user.userId },
     process.env.JWT_SECRET_KEY
@@ -12,9 +13,9 @@ export const createToken = (user) => {
 
 export const varifyToken = (req, res, next) => {
   const accessToken = req.cookies["access-token"];
-  console.log('accessToken', accessToken)
+
   if (!accessToken)
-    return res.status(400).json({ msg: "User Not Authorized!" });
+    return res.status(401).json({ msg: "User Not Authorized!" });
   try {
     const validToken = verify(accessToken, process.env.JWT_SECRET_KEY);
     if (validToken) {
@@ -23,5 +24,19 @@ export const varifyToken = (req, res, next) => {
     }
   } catch (error) {
     return req.status(400).json(error);
+  }
+};
+
+export const decodeJwt = async (token) => {
+  const secretkey = process.env.JWT_SECRET_KEY;
+  try {
+    const tokenData = verify(token, secretkey);
+    if (tokenData) {
+      return tokenData.id;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return false;
   }
 };
