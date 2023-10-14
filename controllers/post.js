@@ -5,7 +5,7 @@ const fields = ["isDp", "post_caption", "post_media_link", "visibility"];
 
 export const postAdd = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const userId = await decodeJwt(accessToken);
+  const {userId,userName} = await decodeJwt(accessToken);
 
   if (!userId) return res.status(401).json("Not Authorized");
 
@@ -15,11 +15,11 @@ export const postAdd = async (req, res) => {
   const { isDp, post_caption, post_media_link, visibility } = req.body;
 
   const q = `INSERT INTO Posts
-  (isDp, post_caption, post_media_link, author_id, visibility)
-  VALUES (?, ?, ?, ?, ?)`;
+  (isDp, post_caption, post_media_link, author_name, author_id,visibility)
+  VALUES (?, ?, ?, ?, ?,?)`;
   db.query(
     q,
-    [isDp, post_caption, post_media_link, userId, visibility],
+    [isDp, post_caption, post_media_link,userName, userId, visibility],
     (err, data) => {
       if (err) return res.status(500).json(err);
       console.log("data", data);
@@ -28,11 +28,13 @@ export const postAdd = async (req, res) => {
   );
 };
 
+//? Single post
 export const getPost = async (req, res) => {
   const postId = req.params.postId;
 
-  const q = "SELECT * FROM Posts WHERE post_id=?";
+  const q = "SELECT * FROM Posts WHERE post_id=? ";
   db.query(q, [postId], (err, data) => {
+ 
     if (err) return res.status(500).json(err);
     if (data.length === 0) res.status(404).json("Post not found!");
     return res.status(200).json(data[0]);
@@ -41,7 +43,7 @@ export const getPost = async (req, res) => {
 
 export const editPost = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const userId = await decodeJwt(accessToken);
+  const {userId} = await decodeJwt(accessToken);
 
   //validation
   if (
@@ -89,3 +91,17 @@ const editQuery = (UpdateData, postId, res) => {
     return res.status(200).json("Post Updated Successfully!");
   });
 };
+
+export const getProfilePosts=async(req,res)=>{
+ const userName=req.params.userName;
+const q=`SELECT p.*,pr.type,u.profilePicture FROM Posts p 
+left join PostReaction pr on p.post_id = pr.postId
+JOIN Users u on p.author_id =u.userId 
+where p.author_name=? ORDER BY CreatedAt DESC`
+ 
+ db.query(q,[userName],(err,data)=>{
+  if(err) return res.status(500).json(err);
+  res.status(200).json(data);
+ })
+
+}

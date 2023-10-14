@@ -17,9 +17,7 @@ export const registerUser = (req, res) => {
   bcrypt.hash(password, 10, (err, hash) => {
     if (err) {
       console.error("Error hashing the password:", err);
-      res
-        .status(500)
-        .json( "Password encryption failed. Plaese try again!" );
+      res.status(500).json("Password encryption failed. Plaese try again!");
     } else {
       registerQuerry(querry, { ...req.body, hash }, res);
     }
@@ -27,8 +25,8 @@ export const registerUser = (req, res) => {
 };
 
 function registerQuerry(q, userData, res) {
-  userData.userName=userData.userName.split(" ").join("")
-  userData.userName=userData.userName.split("/").join("")
+  userData.userName = userData.userName.split(" ").join("");
+  userData.userName = userData.userName.split("/").join("");
 
   const { userName, profilePicture, hash } = userData;
   db.query(q, [userName, hash, profilePicture], (err, data) => {
@@ -57,15 +55,14 @@ export const loginUser = (req, res) => {
   const { userName, password } = req.body;
 
   if (!userName | !password) {
-    res.status(500).json( "enter userId or password!" );
+    res.status(500).json("enter userId or password!");
     return;
   }
   const q = "select * from Users where userName = ?";
 
   db.query(q, [userName], (err, data) => {
     if (err) res.status(500).json(err);
-    else if (data.length == 0)
-      res.status(404).json( "user  not found!" );
+    else if (data.length == 0) res.status(404).json("user  not found!");
     else {
       console.log("data", data);
       const hashed = data[0].password;
@@ -79,9 +76,7 @@ export const loginUser = (req, res) => {
               maxAge: 60 * 60 * 24 * 1000 * 7,
             });
             const { password, ...rest } = data[0];
-            res
-              .status(200)
-              .json({  userData: rest });
+            res.status(200).json({ userData: rest });
           } else {
             res.status(400).json("Password is incorrect");
           }
@@ -89,4 +84,9 @@ export const loginUser = (req, res) => {
       });
     }
   });
+};
+
+export const logOut =  (req,res) => {
+  res.clearCookie("access-token");
+  res.status(200).json("logged out!");
 };

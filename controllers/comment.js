@@ -3,7 +3,7 @@ import { db } from "../db.js";
 
 export const addCommentToPost = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const userId = await decodeJwt(accessToken);
+  const {userId} = await decodeJwt(accessToken);
   const PostID = req.params.postId;
   //? BODY VALIDATION
   if (!req.body.hasOwnProperty("CommentText"))
@@ -19,7 +19,7 @@ export const addCommentToPost = async (req, res) => {
 
 export const addReply=async (req,res)=>{
     const accessToken = req.cookies["access-token"];
-    const userId = await decodeJwt(accessToken);
+    const {userId} = await decodeJwt(accessToken);
     const commentID = req.params.commentId;
     //? BODY VALIDATION
     if (!req.body.hasOwnProperty("CommentText"))

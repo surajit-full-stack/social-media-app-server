@@ -3,7 +3,7 @@ import { db } from "../db.js";
 
 export const postReacton = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const userId = await decodeJwt(accessToken);
+  const { userId } = await decodeJwt(accessToken);
   const postId = req.params.postId;
   if (!req.body.hasOwnProperty("type"))
     return res.status(500).json("Invalid body");
@@ -29,9 +29,26 @@ export const postReacton = async (req, res) => {
     // if post to be reacted for first time by the user
     else {
       const Insertquery = `INSERT INTO PostReaction (reactorId,postId,type) VALUES (?,?,?);`;
+      const likeCountQuery =
+        "UPDATE Posts SET reaction_count=reaction_count + 1 WHERE post_id=?";
+
+      db.beginTransaction((err) => {
+        if (err) console.log(err);
+        return;
+      });
       db.query(Insertquery, [userId, postId, type], (err, result) => {
         if (err) return res.status(500).json(err);
         return res.status(200).json("Post reacted!");
+      });
+      db.query(likeCountQuery, [postId], (err, data) => {
+        if (err) return res.status(500).json(data);
+      });
+      db.commit((err) => {
+        if (err) {
+          db.rollback();
+        } else {
+          console.log("Transaction successfull");
+        }
       });
     }
   });
@@ -39,7 +56,7 @@ export const postReacton = async (req, res) => {
 
 export const commentReaction = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const userId = await decodeJwt(accessToken);
+  const { userId } = await decodeJwt(accessToken);
   const commentId = req.params.commentId;
   if (!req.body.hasOwnProperty("type"))
     return res.status(500).json("Invalid body");
@@ -69,6 +86,36 @@ export const commentReaction = async (req, res) => {
         if (err) return res.status(500).json(err);
         return res.status(200).json("Comment reacted!");
       });
+    }
+  });
+};
+
+export const unReactPost = async (req, res) => {
+  const accessToken = req.cookies["access-token"];
+  const { userId } = await decodeJwt(accessToken);
+  console.log('userId', userId)
+  const postId = req.params.postId;
+
+
+  const deleteQuery = `DELETE FROM PostReaction WHERE reactorId=? and postId=?`;
+  const likeCountQuery =
+    "UPDATE Posts SET reaction_count=reaction_count - 1 WHERE post_id=?";
+  db.beginTransaction((err) => {
+    if (err) console.log(err);
+    return;
+  });
+  db.query(deleteQuery, [userId, postId], (err, result) => {
+    if (err) return res.status(500).json(err);
+    return res.status(200).json("Post UnReacted!");
+  });
+  db.query(likeCountQuery, [postId], (err, data) => {
+    if (err) return res.status(500).json(data);
+  });
+  db.commit((err) => {
+    if (err) {
+      db.rollback();
+    } else {
+      console.log("Transaction successfull-");
     }
   });
 };

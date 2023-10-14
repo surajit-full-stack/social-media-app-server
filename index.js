@@ -5,6 +5,7 @@ import postRoute from "./routes/post.js";
 import reactionRoute from "./routes/like.js";
 import CommentRoute from "./routes/comment.js";
 import followRouter from "./routes/follower.js";
+import feedRouter from "./routes/feed.js";
 import cookieParser from "cookie-parser";
 import { db } from "./db.js";
 import dotenv from "dotenv";
@@ -28,6 +29,7 @@ app.use("/api/user", postRoute);
 app.use("/api/user", reactionRoute);
 app.use("/api/user", CommentRoute);
 app.use("/api/user", followRouter);
+app.use("/api/user", feedRouter);
 app.use("/api/user", auth);
 
 app.listen(8000, () => {

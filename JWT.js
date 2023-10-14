@@ -32,7 +32,7 @@ export const decodeJwt = async (token) => {
   try {
     const tokenData = verify(token, secretkey);
     if (tokenData) {
-      return tokenData.id;
+      return { userId: tokenData.id, userName: tokenData.userName };
     } else {
       return false;
     }
