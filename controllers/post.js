@@ -93,13 +93,15 @@ const editQuery = (UpdateData, postId, res) => {
 };
 
 export const getProfilePosts=async(req,res)=>{
+  const accessToken = req.cookies["access-token"];
+  const {userId} = await decodeJwt(accessToken);
  const userName=req.params.userName;
 const q=`SELECT p.*,pr.type,u.profilePicture FROM Posts p 
-left join PostReaction pr on p.post_id = pr.postId
+left join PostReaction pr on p.post_id = pr.postId and pr.reactorId = ?
 JOIN Users u on p.author_id =u.userId 
 where p.author_name=? ORDER BY CreatedAt DESC`
  
- db.query(q,[userName],(err,data)=>{
+ db.query(q,[userId,userName],(err,data)=>{
   if(err) return res.status(500).json(err);
   res.status(200).json(data);
  })
