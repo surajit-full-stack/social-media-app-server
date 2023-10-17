@@ -13,8 +13,7 @@ export const addCommentToPost = async (req, res) => {
   const commentCountQuery =
     "UPDATE Posts SET comments_count=comments_count + 1 WHERE post_id=?";
   db.beginTransaction((err) => {
-    if (err) console.log(err);
-    return;
+    if (err) return res.status(500).json(err);
   });
 
   db.query(q, [PostID, CommentText, userId], (err, data) => {
@@ -42,12 +41,40 @@ export const addReply = async (req, res) => {
   //? BODY VALIDATION
   if (!req.body.hasOwnProperty("CommentText"))
     return res.status(500).json("CommentText is required");
-  const { CommentText } = req.body;
-  const q =
-    "INSERT INTO Comments (ParentCommentID,CommentText,UserID) VALUES (?,?,?)";
-  db.query(q, [commentID, CommentText, userId], (err, data) => {
+  const { CommentText, replyTo, postId } = req.body;
+
+  db.beginTransaction((err) => {
+    console.log("start");
     if (err) return res.status(500).json(err);
-    return res.status(200).json("reply added!");
+  });
+
+  // Add reply
+
+  const q =
+    "INSERT INTO Comments (ParentCommentID,CommentText,UserID,replyTo) VALUES (?,?,?,?)";
+  db.query(q, [commentID, CommentText, userId, replyTo], (err, data) => {
+    if (err) return res.status(500).json(err);
+  });
+  // post count inc
+  const postCntIncQuerry = `UPDATE Posts SET comments_count=comments_count+1 WHERE post_id=?`;
+  db.query(postCntIncQuerry, [postId], (err, data) => {
+    if (err) return res.status(500).json(err);
+  });
+
+  // reply count
+  const countIncQuerry = `UPDATE Comments SET replycount = replycount+1 WHERE CommentID=?`;
+  db.query(countIncQuerry, [commentID], (err, data) => {
+    if (err) return res.status(500).json(err);
+  });
+
+  // commit and rollback
+
+  db.commit((err, data) => {
+    if (err) {
+      db.rollback();
+    } else {
+      return res.status(200).json("reply added!");
+    }
   });
 };
 
@@ -55,6 +82,14 @@ export const getCommnets = (req, res) => {
   const postId = req.params.postId;
   const q = `SELECT c.*,u.userName,u.profilePicture FROM Comments c JOIN Users u ON c.UserId=u.userId WHERE PostID=?  ORDER BY c.Timestamp DESC`;
   db.query(q, [postId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    res.status(200).json(data);
+  });
+};
+export const getReplies = (req, res) => {
+  const commentId = req.params.commentId;
+  const q = `SELECT c.*,u.userName,u.profilePicture FROM Comments c JOIN Users u ON c.UserId=u.userId WHERE ParentCommentID=?  ORDER BY c.Timestamp`;
+  db.query(q, [commentId], (err, data) => {
     if (err) return res.status(500).json(err);
     res.status(200).json(data);
   });
