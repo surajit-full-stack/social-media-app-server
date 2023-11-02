@@ -80,7 +80,8 @@ export const addReply = async (req, res) => {
 
 export const getCommnets = (req, res) => {
   const postId = req.params.postId;
-  const q = `SELECT c.*,u.userName,u.profilePicture FROM Comments c JOIN Users u ON c.UserId=u.userId WHERE PostID=?  ORDER BY c.Timestamp DESC`;
+  const q = `SELECT cr.type ,c.*,u.userName,u.profilePicture FROM Comments c JOIN Users u ON c.UserId=u.userId LEFT join CommentReaction cr on u.userId =cr.reactorId AND c.CommentID=cr.CommentId WHERE PostID=?  ORDER BY c.Timestamp DESC
+  `;
   db.query(q, [postId], (err, data) => {
     if (err) return res.status(500).json(err);
     res.status(200).json(data);
@@ -88,7 +89,7 @@ export const getCommnets = (req, res) => {
 };
 export const getReplies = (req, res) => {
   const commentId = req.params.commentId;
-  const q = `SELECT c.*,u.userName,u.profilePicture FROM Comments c JOIN Users u ON c.UserId=u.userId WHERE ParentCommentID=?  ORDER BY c.Timestamp`;
+  const q = `SELECT cr.type, c.*,u.userName,u.profilePicture FROM Comments c JOIN Users u ON c.UserId=u.userId LEFT JOIN CommentReaction cr on u.userId=cr.reactorId AND c.CommentID=cr.CommentId WHERE ParentCommentID=?  ORDER BY c.Timestamp`;
   db.query(q, [commentId], (err, data) => {
     if (err) return res.status(500).json(err);
     res.status(200).json(data);

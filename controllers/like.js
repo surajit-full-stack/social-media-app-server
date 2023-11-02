@@ -82,9 +82,24 @@ export const commentReaction = async (req, res) => {
     // if post to be reacted for first time by the user
     else {
       const Insertquery = `INSERT INTO CommentReaction (reactorId,CommentId,type) VALUES (?,?,?);`;
+      const reactionUpdateQuery = `UPDATE Comments SET reactionCount=reactionCount + 1 WHERE CommentId=?`;
+      db.beginTransaction((err) => {
+        if (err) return res.status(500).json(err);
+      });
+
       db.query(Insertquery, [userId, commentId, type], (err, result) => {
         if (err) return res.status(500).json(err);
         return res.status(200).json("Comment reacted!");
+      });
+      db.query(reactionUpdateQuery, [commentId], (err, result) => {
+        if (err) return res.status(500).json(err);
+      });
+      db.commit((err) => {
+        if (err) {
+          db.rollback();
+        } else {
+          console.log("Transaction successfull");
+        }
       });
     }
   });
@@ -93,9 +108,8 @@ export const commentReaction = async (req, res) => {
 export const unReactPost = async (req, res) => {
   const accessToken = req.cookies["access-token"];
   const { userId } = await decodeJwt(accessToken);
-  console.log('userId', userId)
+  console.log("userId", userId);
   const postId = req.params.postId;
-
 
   const deleteQuery = `DELETE FROM PostReaction WHERE reactorId=? and postId=?`;
   const likeCountQuery =
@@ -109,6 +123,35 @@ export const unReactPost = async (req, res) => {
     return res.status(200).json("Post UnReacted!");
   });
   db.query(likeCountQuery, [postId], (err, data) => {
+    if (err) return res.status(500).json(data);
+  });
+  db.commit((err) => {
+    if (err) {
+      db.rollback();
+    } else {
+      console.log("Transaction successfull-");
+    }
+  });
+};
+
+export const unReactComment = async (req, res) => {
+  const accessToken = req.cookies["access-token"];
+  const { userId } = await decodeJwt(accessToken);
+  console.log("userId", userId);
+  const commentId = req.params.commentId;
+
+  const deleteQuery = `DELETE FROM CommentReaction WHERE reactorId=? and CommentId=?`;
+  const likeCountQuery =
+    "UPDATE Posts SET reactionCount=reactionCount - 1 WHERE commentId=?";
+  db.beginTransaction((err) => {
+    if (err) console.log(err);
+    return;
+  });
+  db.query(deleteQuery, [userId, commentId], (err, result) => {
+    if (err) return res.status(500).json(err);
+    return res.status(200).json("Post UnReacted!");
+  });
+  db.query(likeCountQuery, [commentId], (err, data) => {
     if (err) return res.status(500).json(data);
   });
   db.commit((err) => {
