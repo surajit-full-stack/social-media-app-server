@@ -38,6 +38,7 @@ export const addReply = async (req, res) => {
   const accessToken = req.cookies["access-token"];
   const { userId } = await decodeJwt(accessToken);
   const commentID = req.params.commentId;
+
   //? BODY VALIDATION
   if (!req.body.hasOwnProperty("CommentText"))
     return res.status(500).json("CommentText is required");
@@ -93,5 +94,17 @@ export const getReplies = (req, res) => {
   db.query(q, [commentId], (err, data) => {
     if (err) return res.status(500).json(err);
     res.status(200).json(data);
+  });
+};
+
+export const editComments = async (req, res) => {
+  const commentId = req.params.commentId;
+  const { CommentText } = req.body;
+  const accessToken = req.cookies["access-token"];
+  const { userId } = await decodeJwt(accessToken);
+  const editQ = `UPDATE Comments SET CommentText=? WHERE CommentID = ? AND UserID=?`;
+  db.query(editQ, [CommentText, commentId, userId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    res.status(200).json("updated");
   });
 };
