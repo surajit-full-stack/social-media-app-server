@@ -33,7 +33,7 @@ export const getFollower = async (req, res) => {
   const userId=req.params.userId;
 
 
-  const q = `SELECT u.userName , u.userId ,u.profilePicture FROM 
+  const q = `SELECT u.userName , u.userId ,u.profilePicture,f.moment FROM 
     Follower f 
     join Users u on f.follower_id =u.userId
     WHERE  f.following_id =?`;

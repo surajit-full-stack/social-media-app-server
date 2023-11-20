@@ -70,7 +70,7 @@ export const addReply = async (req, res) => {
 
   // commit and rollback
 
-  db.commit((err, data) => {
+  db.commit((err) => {
     if (err) {
       db.rollback();
     } else {
@@ -81,7 +81,7 @@ export const addReply = async (req, res) => {
 
 export const getCommnets = (req, res) => {
   const postId = req.params.postId;
-  const q = `SELECT cr.type ,c.*,u.userName,u.profilePicture FROM Comments c JOIN Users u ON c.UserId=u.userId LEFT join CommentReaction cr on u.userId =cr.reactorId AND c.CommentID=cr.CommentId WHERE PostID=?  ORDER BY c.Timestamp DESC
+  const q = `SELECT cr.type ,c.*,u.userName,u.profilePicture FROM Comments c JOIN Users u ON c.UserId=u.userId LEFT join CommentReaction cr on u.userId =cr.reactorId AND c.CommentID=cr.CommentId WHERE PostID=? AND isDel=0 ORDER BY c.Timestamp DESC
   `;
   db.query(q, [postId], (err, data) => {
     if (err) return res.status(500).json(err);
@@ -90,7 +90,7 @@ export const getCommnets = (req, res) => {
 };
 export const getReplies = (req, res) => {
   const commentId = req.params.commentId;
-  const q = `SELECT cr.type, c.*,u.userName,u.profilePicture FROM Comments c JOIN Users u ON c.UserId=u.userId LEFT JOIN CommentReaction cr on u.userId=cr.reactorId AND c.CommentID=cr.CommentId WHERE ParentCommentID=?  ORDER BY c.Timestamp`;
+  const q = `SELECT cr.type, c.*,u.userName,u.profilePicture FROM Comments c JOIN Users u ON c.UserId=u.userId LEFT JOIN CommentReaction cr on u.userId=cr.reactorId AND c.CommentID=cr.CommentId WHERE ParentCommentID=? AND isDel=0  ORDER BY c.Timestamp`;
   db.query(q, [commentId], (err, data) => {
     if (err) return res.status(500).json(err);
     res.status(200).json(data);
@@ -106,5 +106,62 @@ export const editComments = async (req, res) => {
   db.query(editQ, [CommentText, commentId, userId], (err, data) => {
     if (err) return res.status(500).json(err);
     res.status(200).json("updated");
+  });
+};
+
+export const deleteComments = async (req, res) => {
+  const commentId = req.params.commentId;
+  const { postId, pCommentId } = req.body;
+  const accessToken = req.cookies["access-token"];
+  const { userId } = await decodeJwt(accessToken);
+  const delQ = `UPDATE Comments SET isDel=1 WHERE CommentID=? AND UserID=?`;
+  console.log("begin");
+  db.beginTransaction((err) => {
+    console.log("start");
+    if (err) return res.status(500).json(err);
+  });
+  console.log("deleting");
+  db.query(delQ, [commentId, userId], (err, data) => {
+    if (err) return res.status(500).json(err);
+  });
+  console.log("post cnt dec");
+  const postCntIncQuerry = `UPDATE Posts SET comments_count=comments_count-1 WHERE post_id=?`;
+  db.query(postCntIncQuerry, [postId], (err, data) => {
+    if (err) return res.status(500).json(err);
+  });
+
+  if (pCommentId) {
+    const replyCountDec = `UPDATE Comments SET  replycount=replycount-1 where CommentID=?`;
+
+    db.query(replyCountDec, [pCommentId], (err, data) => {
+      if (err) return res.status(500).json(err);
+    });
+  } else {
+    console.log("counting");
+    db.query(
+      `SELECT count(*) from Comments where ParentCommentID=?`,
+      [commentId],
+      (err, data) => {
+        console.log("data", data[0]["count(*)"]);
+        db.query(
+          `UPDATE Posts SET comments_count=comments_count-? WHERE post_id=?`,
+          [data[0]["count(*)"], postId],
+          (err) => {
+            if (err) {
+              return res.status(500).json(err);
+            }
+          }
+        );
+      }
+    );
+  }
+
+  db.commit((err) => {
+    if (err) {
+      console.log("rolling back");
+      db.rollback();
+    } else {
+      return res.status(200).json("comment deleted!");
+    }
   });
 };

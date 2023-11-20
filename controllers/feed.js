@@ -5,7 +5,7 @@ export const getFeed = async (req, res) => {
   const accessToken = req.cookies["access-token"];
   const {userId} = await decodeJwt(accessToken);
 
-  const q = `SELECT p.*  FROM  
+  const q = `SELECT p.*,u.profilePicture  FROM  
     Follower f 
     join Users u on f.follower_id =u.userId
     join Posts p on u.userId =p.author_id 
