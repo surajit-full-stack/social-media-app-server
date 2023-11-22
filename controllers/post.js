@@ -5,7 +5,7 @@ const fields = ["isDp", "post_caption", "post_media_link", "visibility"];
 
 export const postAdd = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const {userId,userName} = await decodeJwt(accessToken);
+  const { userId, userName } = await decodeJwt(accessToken);
 
   if (!userId) return res.status(401).json("Not Authorized");
 
@@ -19,7 +19,7 @@ export const postAdd = async (req, res) => {
   VALUES (?, ?, ?, ?, ?,?)`;
   db.query(
     q,
-    [isDp, post_caption, post_media_link,userName, userId, visibility],
+    [isDp, post_caption, post_media_link, userName, userId, visibility],
     (err, data) => {
       if (err) return res.status(500).json(err);
       console.log("data", data);
@@ -34,7 +34,6 @@ export const getPost = async (req, res) => {
 
   const q = "SELECT * FROM Posts WHERE post_id=? ";
   db.query(q, [postId], (err, data) => {
- 
     if (err) return res.status(500).json(err);
     if (data.length === 0) res.status(404).json("Post not found!");
     return res.status(200).json(data[0]);
@@ -43,7 +42,7 @@ export const getPost = async (req, res) => {
 
 export const editPost = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const {userId} = await decodeJwt(accessToken);
+  const { userId } = await decodeJwt(accessToken);
 
   //validation
   if (
@@ -92,18 +91,46 @@ const editQuery = (UpdateData, postId, res) => {
   });
 };
 
-export const getProfilePosts=async(req,res)=>{
+export const getProfilePosts = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const {userId} = await decodeJwt(accessToken);
- const userName=req.params.userName;
-const q=`SELECT p.*,pr.type,u.profilePicture FROM Posts p 
+  const { userId } = await decodeJwt(accessToken);
+  const userName = req.params.userName;
+  const q = `SELECT p.*,pr.type,u.profilePicture FROM Posts p 
 left join PostReaction pr on p.post_id = pr.postId and pr.reactorId = ?
 JOIN Users u on p.author_id =u.userId 
-where p.author_name=? ORDER BY CreatedAt DESC`
- 
- db.query(q,[userId,userName],(err,data)=>{
-  if(err) return res.status(500).json(err);
-  res.status(200).json(data);
- })
+where p.author_name=? ORDER BY CreatedAt DESC`;
 
-}
+  db.query(q, [userId, userName], (err, data) => {
+    if (err) return res.status(500).json(err);
+    res.status(200).json(data);
+  });
+};
+
+export const getReactor = async (req, res) => {
+  const postId = req.params.postId;
+  const querry = `SELECT u.userName ,u.profilePicture ,pr.type ,pr.createdAt from PostReaction pr 
+join Users u  on pr.reactorId =u.userId 
+WHERE pr.postId =?
+ORDER BY pr.createdAt DESC
+`;
+  db.query(querry, [postId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    return res.status(200).json(data);
+  });
+};
+
+export const getIPreactor = async (req, res) => {
+  const postId = req.params.postId;
+  const accessToken = req.cookies["access-token"];
+  const { userId } = await decodeJwt(accessToken);
+  const querry = `SELECT u.userName from PostReaction pr 
+  join Users u  on pr.reactorId =u.userId AND pr.reactorId!=?
+  WHERE pr.postId =?  
+  ORDER BY pr.createdAt
+  LIMIT 1
+  `;
+  db.query(querry, [userId, postId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    return res.status(200).json(data);
+  });
+};
