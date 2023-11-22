@@ -165,3 +165,16 @@ export const deleteComments = async (req, res) => {
     }
   });
 };
+
+export const getCommentReactions=(req,res)=>{
+  const cmntId = req.params.cmntId;
+  const querry = `SELECT u.userName ,u.profilePicture ,pr.type ,pr.createdAt from CommentReaction pr 
+join Users u  on pr.reactorId =u.userId 
+WHERE pr.CommentId =?
+ORDER BY pr.createdAt DESC
+`;
+  db.query(querry, [cmntId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    return res.status(200).json(data);
+  });
+}
