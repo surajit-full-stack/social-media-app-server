@@ -15,7 +15,19 @@ export const getFeed = async (req, res) => {
   WHERE  f.follower_id  =?
   ORDER BY CreatedAt DESC
   LIMIT 30`;
-  db.query(q, [userId,userId], (err, data) => {
+  db.query(q, [userId, userId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    res.status(200).json(data);
+  });
+};
+
+export const userAutoComplete = (req, res) => {
+  const { name } = req.params;
+  const pattern = `%${Array.from(name).join("%")}%`;
+  const userAutoCompleteQuery = `
+  SELECT u.userName,u.userId,u.profilePicture from Users u  WHERE userName  LIKE ?;
+  `;
+  db.query(userAutoCompleteQuery, [pattern], (err, data) => {
     if (err) return res.status(500).json(err);
     res.status(200).json(data);
   });

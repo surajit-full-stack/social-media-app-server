@@ -13,7 +13,7 @@ export const createToken = (user) => {
 
 export const varifyToken = (req, res, next) => {
   const accessToken = req.cookies["access-token"];
-
+console.log('a', accessToken)
   if (!accessToken)
     return res.status(401).json({ msg: "User Not Authorized!" });
   try {
@@ -23,7 +23,7 @@ export const varifyToken = (req, res, next) => {
       return next();
     }
   } catch (error) {
-    return req.status(400).json(error);
+    return res.status(400).json(error);
   }
 };
 
