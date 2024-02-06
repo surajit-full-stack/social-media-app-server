@@ -1,9 +1,10 @@
 import { decodeJwt } from "../JWT.js";
 import { db } from "../db.js";
+import { sendPostNotification } from "../socket.js";
 
 export const postReacton = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const { userId } = await decodeJwt(accessToken);
+  const { userId, userName } = await decodeJwt(accessToken);
   const postId = req.params.postId;
   if (!req.body.hasOwnProperty("type"))
     return res.status(500).json("Invalid body");
@@ -38,6 +39,7 @@ export const postReacton = async (req, res) => {
       });
       db.query(Insertquery, [userId, postId, type], (err, result) => {
         if (err) return res.status(500).json(err);
+        sendPostNotification(userId, userName, postId,type);
         return res.status(200).json("Post reacted!");
       });
       db.query(likeCountQuery, [postId], (err, data) => {
@@ -162,4 +164,3 @@ export const unReactComment = async (req, res) => {
     }
   });
 };
-

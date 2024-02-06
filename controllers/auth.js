@@ -2,7 +2,7 @@ import { db } from "../db.js";
 import bcrypt from "bcrypt";
 import { createToken } from "../JWT.js";
 export const registerUser = (req, res) => {
-  console.log("req.body", req.body);
+ 
 
   const { password } = req.body;
   if (password.length < 5) {
@@ -30,7 +30,7 @@ function registerQuerry(q, userData, res) {
 
   const { userName, profilePicture, hash } = userData;
   db.query(q, [userName, hash, profilePicture], (err, data) => {
-    console.log("data", data);
+  
     if (err) {
       const error = { ...err };
       if (err.code === "ER_DUP_ENTRY")
@@ -43,7 +43,7 @@ function registerQuerry(q, userData, res) {
       userName,
     };
     const accessToken = createToken(user);
-    console.log("accessToken", accessToken);
+  
     res.cookie("access-token", accessToken, {
       maxAge: 60 * 60 * 24 * 1000 * 7,
     });
@@ -64,7 +64,7 @@ export const loginUser = (req, res) => {
     if (err) res.status(500).json(err);
     else if (data.length == 0) res.status(404).json("user  not found!");
     else {
-      console.log("data", data);
+    
       const hashed = data[0].password;
       bcrypt.compare(password, hashed, (err, result) => {
         if (err) {
