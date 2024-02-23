@@ -52,6 +52,7 @@ export const sendPostNotification = (senderId, senderName, postId, type) => {
       if (err) return console.log("err", err);
 
       const [{ author_id, caption }] = result;
+      console.log('author_id', author_id)
       const socketId = users.get(author_id);
       if (socketId) {
         io.to(socketId).emit("post-reaction", {

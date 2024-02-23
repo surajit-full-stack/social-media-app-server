@@ -4,7 +4,7 @@ const { sign, verify } = pkg;
 export const createToken = (user) => {
 
   const accessToken = sign(
-    { userName: user.userName, id: user.userId },
+    { userName: user.userName, id: user.userId,profilePicture:user.profilePicture },
     process.env.JWT_SECRET_KEY
   );
 
@@ -13,6 +13,7 @@ export const createToken = (user) => {
 
 export const varifyToken = (req, res, next) => {
   const accessToken = req.cookies["access-token"];
+  // console.log('accessToken', accessToken)
   if (!accessToken)
     return res.status(401).json({ msg: "User Not Authorized!" });
   try {
@@ -31,7 +32,7 @@ export const decodeJwt = async (token) => {
   try {
     const tokenData = verify(token, secretkey);
     if (tokenData) {
-      return { userId: tokenData.id, userName: tokenData.userName };
+      return { userId: tokenData.id, userName: tokenData.userName ,profilePicture:tokenData.profilePicture};
     } else {
       return false;
     }

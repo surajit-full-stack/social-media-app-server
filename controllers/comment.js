@@ -1,14 +1,15 @@
 import { decodeJwt } from "../JWT.js";
 import { db } from "../db.js";
-
+import { publish } from "../pub-sub/publisher.js";
+import moment from "moment"
 export const addCommentToPost = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const { userId } = await decodeJwt(accessToken);
+  const { userId,userName,profilePicture } = await decodeJwt(accessToken);
   const PostID = req.params.postId;
   //? BODY VALIDATION
   if (!req.body.hasOwnProperty("CommentText"))
     return res.status(500).json("CommentText is required");
-  const { CommentText } = req.body;
+  const { CommentText,author_id } = req.body;
   const q = "INSERT INTO Comments (PostID,CommentText,UserID) VALUES (?,?,?)";
   const commentCountQuery =
     "UPDATE Posts SET comments_count=comments_count + 1 WHERE post_id=?";
@@ -24,19 +25,29 @@ export const addCommentToPost = async (req, res) => {
   db.query(commentCountQuery, [PostID], (err, data) => {
     if (err) return res.status(500).json(err);
   });
-
+  publish(     {
+    sourceUserId: userId,
+    postId:PostID,
+    type: "comment",
+    sourceUserName: userName,
+    sourceDp:profilePicture,
+    caption: CommentText.slice(0,49),
+    dbkey: author_id,
+    time: moment(),
+  },
+  "comment")
   db.commit((err, data) => {
     if (err) {
       db.rollback();
     } else {
-      console.log("Transaction successfull");
+      // console.log("Transaction successfull");
     }
   });
 };
 
 export const addReply = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const { userId } = await decodeJwt(accessToken);
+  const { userId ,profilePicture,userName} = await decodeJwt(accessToken);
   const commentID = req.params.commentId;
 
   //? BODY VALIDATION
@@ -68,6 +79,17 @@ export const addReply = async (req, res) => {
     if (err) return res.status(500).json(err);
   });
 
+  publish(     {
+    sourceUserId: userId,
+    postId,
+    type: "reply",
+    sourceUserName: userName,
+    sourceDp:profilePicture,
+    caption: CommentText.slice(0,49),
+    dbkey: replyTo,
+    time: moment(),
+  },
+  "reply")
   // commit and rollback
 
   db.commit((err) => {

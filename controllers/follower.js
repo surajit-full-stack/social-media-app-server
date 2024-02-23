@@ -1,9 +1,10 @@
 import { decodeJwt } from "../JWT.js";
 import { db } from "../db.js";
+import { publish } from "../pub-sub/publisher.js";
 
 export const followingUser = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const { userId } = await decodeJwt(accessToken);
+  const { userId,userName,profilePicture } = await decodeJwt(accessToken);
   const followedId = req.params.followingId;
   if (userId == followedId)
     return res.status(500).json("self following is not allowed");
@@ -12,6 +13,17 @@ export const followingUser = async (req, res) => {
   db.query(q, [userId, followedId], (err, data) => {
     if (err) return res.status(500).json(req);
     res.status(200).json(userId);
+    return publish(     {
+      sourceUserId: userId,
+      postId:null,
+      type: "following",
+      sourceUserName: userName,
+      sourceDp:profilePicture,
+      caption: null,
+      dbkey: followedId,
+      time: moment(),
+    },
+    "following")
   });
 };
 
@@ -43,6 +55,7 @@ export const getFollower = async (req, res) => {
 };
 export const getFollowings = async (req, res) => {
   const userId = req.params.userId;
+ 
 
   const q = `SELECT u.userName , u.userId ,u.profilePicture,f.moment FROM 
     Follower f 
@@ -53,8 +66,6 @@ export const getFollowings = async (req, res) => {
     res.status(200).json(data);
   });
 };
-
-
 
 export const followerSuggetion = async (req, res) => {
   const accessToken = req.cookies["access-token"];

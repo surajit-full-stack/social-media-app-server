@@ -1,14 +1,16 @@
+import moment from "moment";
 import { decodeJwt } from "../JWT.js";
 import { db } from "../db.js";
+import { publish } from "../pub-sub/publisher.js";
 import { sendPostNotification } from "../socket.js";
 
 export const postReacton = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const { userId, userName } = await decodeJwt(accessToken);
+  const { userId, userName ,profilePicture} = await decodeJwt(accessToken);
   const postId = req.params.postId;
   if (!req.body.hasOwnProperty("type"))
     return res.status(500).json("Invalid body");
-  const { type } = req.body;
+  const { type,author_id } = req.body;
 
   //check post already reacted by the user
   const reactionCheackQuery = `select reactionId from PostReaction where reactorId=? and postId=?`;
@@ -23,6 +25,7 @@ export const postReacton = async (req, res) => {
       db.query(updateQuery, [type, userId, postId], (err, response) => {
         if (err) return res.status(500).json(err);
         res.status(200).json("Reaction updated!");
+     
         return true;
       });
     }
@@ -39,7 +42,17 @@ export const postReacton = async (req, res) => {
       });
       db.query(Insertquery, [userId, postId, type], (err, result) => {
         if (err) return res.status(500).json(err);
-        sendPostNotification(userId, userName, postId,type);
+
+        publish({
+          sourceUserId: userId,
+          postId,
+          type: "react",
+          sourceUserName: userName,
+          sourceDp:profilePicture,
+          caption: type,
+          dbkey:author_id,
+          time:moment()
+        },'react');
         return res.status(200).json("Post reacted!");
       });
       db.query(likeCountQuery, [postId], (err, data) => {
@@ -48,9 +61,7 @@ export const postReacton = async (req, res) => {
       db.commit((err) => {
         if (err) {
           db.rollback();
-        } else {
-          console.log("Transaction successfull");
-        }
+        } 
       });
     }
   });

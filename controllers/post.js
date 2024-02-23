@@ -1,11 +1,13 @@
+import moment from "moment";
 import { decodeJwt } from "../JWT.js";
 import { db } from "../db.js";
+import { publish } from "../pub-sub/publisher.js";
 import cheackBody from "./utils/FieldChecker.js";
 const fields = ["isDp", "post_caption", "post_media_link", "visibility"];
 
 export const postAdd = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const { userId, userName } = await decodeJwt(accessToken);
+  const { userId, userName ,profilePicture} = await decodeJwt(accessToken);
 
   if (!userId) return res.status(401).json("Not Authorized");
 
@@ -23,6 +25,21 @@ export const postAdd = async (req, res) => {
     (err, data) => {
       if (err) return res.status(500).json(err);
       console.log("data", data);
+      const postId = data.insertId;
+      console.log('profilePicture', profilePicture)
+      publish(
+        {
+          sourceUserId: userId,
+          postId,
+          type: "post",
+          sourceUserName: userName,
+          sourceDp:profilePicture,
+          caption: post_caption,
+          dbkey: userId,
+          time: moment(),
+        },
+        "new"
+      );
       res.status(200).json("posted");
     }
   );

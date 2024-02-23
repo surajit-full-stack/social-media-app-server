@@ -16,7 +16,7 @@ dotenv.config();
 const app = express();
 
 const server = http.createServer(app);
-initateSocket(server);
+// initateSocket(server);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -25,8 +25,11 @@ const corsOptions = {
   credentials: true,
   origin: process.env.ORIGIN,
 };
+console.log('process.env.ORIGIN', process.env.ORIGIN)
 app.use(cors(corsOptions));
-
+app.get('/', (req, res) => {
+  res.send('Hello, World!'); // Send a response with "Hello, World!"
+});
 app.use("/api/user", userRoute);
 app.use("/api/user", postRoute);
 app.use("/api/user", reactionRoute);
