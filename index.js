@@ -11,7 +11,6 @@ import cookieParser from "cookie-parser";
 import { db } from "./db.js";
 import dotenv from "dotenv";
 import cors from "cors";
-import { initateSocket } from "./socket.js";
 dotenv.config();
 const app = express();
 

@@ -74,10 +74,10 @@ export const loginUser = (req, res) => {
           console.error("Error comparing passwords:", err);
         } else {
           if (result) {
-            console.log('data[0]', data[0])
+           
             const accessToken = createToken(data[0]);
             res.cookie("access-token", accessToken, cookieOpt);
-            console.log('accessToken', accessToken)
+       
             const { password, ...rest } = data[0];
             res.status(200).json({ userData: rest, accessToken });
           } else {
