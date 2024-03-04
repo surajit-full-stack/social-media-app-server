@@ -2,10 +2,40 @@ import pkg from "jsonwebtoken";
 const { sign, verify } = pkg;
 
 export const createToken = (user) => {
-
   const accessToken = sign(
-    { userName: user.userName, id: user.userId,profilePicture:user.profilePicture },
-    process.env.JWT_SECRET_KEY
+    {
+      userName: user.userName,
+      id: user.userId,
+      profilePicture: user.profilePicture,
+    },
+    process.env.JWT_SECRET_KEY,
+    { expiresIn: "15m" }
+  );
+
+  return accessToken;
+};
+export const createRefreashToken = (user) => {
+  const accessToken = sign(
+    {
+      userName: user.userName,
+      id: user.userId,
+      profilePicture: user.profilePicture,
+    },
+    process.env.JWT_REFREASH_KEY,
+    { expiresIn: "10d" }
+  );
+
+  return accessToken;
+};
+export const createChatToken = (user) => {
+  const accessToken = sign(
+    {
+      userName: user.userName,
+      id: user.userId,
+      profilePicture: user.profilePicture,
+    },
+    process.env.JWT_CHAT_KEY,
+    { expiresIn: "15s" }
   );
 
   return accessToken;
@@ -23,7 +53,7 @@ export const varifyToken = (req, res, next) => {
       return next();
     }
   } catch (error) {
-    return res.status(400).json(error);
+    return res.status(401).json(error);
   }
 };
 
@@ -32,7 +62,11 @@ export const decodeJwt = async (token) => {
   try {
     const tokenData = verify(token, secretkey);
     if (tokenData) {
-      return { userId: tokenData.id, userName: tokenData.userName ,profilePicture:tokenData.profilePicture};
+      return {
+        userId: tokenData.id,
+        userName: tokenData.userName,
+        profilePicture: tokenData.profilePicture,
+      };
     } else {
       return false;
     }

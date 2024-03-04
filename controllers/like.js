@@ -121,7 +121,7 @@ export const commentReaction = async (req, res) => {
 export const unReactPost = async (req, res) => {
   const accessToken = req.cookies["access-token"];
   const { userId } = await decodeJwt(accessToken);
-  console.log("userId", userId);
+
   const postId = req.params.postId;
 
   const deleteQuery = `DELETE FROM PostReaction WHERE reactorId=? and postId=?`;
@@ -150,7 +150,7 @@ export const unReactPost = async (req, res) => {
 export const unReactComment = async (req, res) => {
   const accessToken = req.cookies["access-token"];
   const { userId } = await decodeJwt(accessToken);
-  console.log("userId", userId);
+ 
   const commentId = req.params.commentId;
 
   const deleteQuery = `DELETE FROM CommentReaction WHERE reactorId=? and CommentId=?`;

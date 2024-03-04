@@ -54,7 +54,9 @@ export const getFollower = async (req, res) => {
   });
 };
 export const getFollowings = async (req, res) => {
-  const userId = req.params.userId;
+  const accessToken = req.cookies["access-token"];
+  const { userId:extractId} = await decodeJwt(accessToken);
+  const userId = req.params.userId??extractId;
  
 
   const q = `SELECT u.userName , u.userId ,u.profilePicture,f.moment FROM 

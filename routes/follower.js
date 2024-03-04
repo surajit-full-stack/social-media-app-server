@@ -7,6 +7,7 @@ router.post("/follow/:followingId",varifyToken,followingUser)
 router.post("/unfollow/:followingId",varifyToken,unFollowUser)
 router.get("/get-follower/:userId",varifyToken,getFollower)
 router.get("/get-following/:userId",varifyToken,getFollowings)
+router.get("/get-following",varifyToken,getFollowings)
 router.get("/get-follower-suggestion",varifyToken,followerSuggetion)
 
 export default router

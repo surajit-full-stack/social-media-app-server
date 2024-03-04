@@ -22,12 +22,12 @@ app.use(cookieParser());
 const corsOptions = {
   methods: "GET,POST",
   credentials: true,
-  origin: process.env.ORIGIN,
+  origin: [process.env.ORIGIN,"http://localhost:3000"],
 };
 console.log('process.env.ORIGIN', process.env.ORIGIN)
 app.use(cors(corsOptions));
 app.get('/', (req, res) => {
-  res.send('Hello, World!'); // Send a response with "Hello, World!"
+  res.send('Api Server!'); // Send a response with "Hello, World!"
 });
 app.use("/api/user", userRoute);
 app.use("/api/user", postRoute);

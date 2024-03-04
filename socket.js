@@ -29,7 +29,7 @@ export const initateSocket = (server) => {
 
     socket.on("login", (userId) => {
       pushUser(socket.id, userId);
-      console.log("users", users);
+      
       //   sendPostNotification(315, "liam", 9);
     });
 
@@ -38,7 +38,7 @@ export const initateSocket = (server) => {
     socket.on("disconnect", () => {
       removeUser(socket.id);
       console.log("A client disconnected");
-      console.log("users", users);
+     
       // Additional cleanup or logic can be placed here
     });
   });
