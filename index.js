@@ -11,6 +11,7 @@ import cookieParser from "cookie-parser";
 import { db } from "./db.js";
 import dotenv from "dotenv";
 import cors from "cors";
+import { kafkaInit } from "./pub-sub/publisher.js";
 dotenv.config();
 const app = express();
 
@@ -22,12 +23,12 @@ app.use(cookieParser());
 const corsOptions = {
   methods: "GET,POST",
   credentials: true,
-  origin: [process.env.ORIGIN,"http://localhost:3000"],
+  origin: [process.env.ORIGIN, "http://localhost:3000"],
 };
-console.log('process.env.ORIGIN', process.env.ORIGIN)
+console.log("process.env.ORIGIN", process.env.ORIGIN);
 app.use(cors(corsOptions));
-app.get('/', (req, res) => {
-  res.send('Api Server!'); // Send a response with "Hello, World!"
+app.get("/", (req, res) => {
+  res.send("Api Server!"); // Send a response with "Hello, World!"
 });
 app.use("/api/user", userRoute);
 app.use("/api/user", postRoute);
@@ -45,6 +46,9 @@ server.listen(8000, () => {
     }
     console.log("Connected to MySQL database");
   });
+  
+  // connect kafka
+  kafkaInit();
+
   console.log("server running on 8000");
 });
-
