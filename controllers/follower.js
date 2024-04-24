@@ -1,29 +1,32 @@
 import { decodeJwt } from "../JWT.js";
 import { db } from "../db.js";
 import { publish } from "../pub-sub/publisher.js";
-import moment from "moment"
+import moment from "moment";
+import { v4 as uuidv4 } from "uuid";
 export const followingUser = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const { userId,userName,profilePicture } = await decodeJwt(accessToken);
+  const { userId, userName, profilePicture } = await decodeJwt(accessToken);
   const followedId = req.params.followingId;
   if (userId == followedId)
     return res.status(500).json("self following is not allowed");
-  const q = "INSERT INTO Follower (follower_id,following_id) VALUES (?,?)";
+  const q = "INSERT INTO Follower (follower_id,following_id,id) VALUES (?,?,?)";
 
-  db.query(q, [userId, followedId], (err, data) => {
+  db.query(q, [userId, followedId, uuidv4()], (err, data) => {
     if (err) return res.status(500).json(req);
     res.status(200).json(userId);
-    return publish(     {
-      sourceUserId: userId,
-      postId:null,
-      type: "following",
-      sourceUserName: userName,
-      sourceDp:profilePicture,
-      caption: null,
-      dbkey: followedId,
-      time: moment(),
-    },
-    "following")
+    return publish(
+      {
+        sourceUserId: userId,
+        postId: null,
+        type: "following",
+        sourceUserName: userName,
+        sourceDp: profilePicture,
+        caption: null,
+        dbkey: followedId,
+        time: moment(),
+      },
+      "following"
+    );
   });
 };
 
@@ -55,11 +58,10 @@ export const getFollower = async (req, res) => {
 };
 export const getFollowings = async (req, res) => {
   const accessToken = req.cookies["access-token"];
-  const { userId:extractId} = await decodeJwt(accessToken);
-  const userId = req.params.userId??extractId;
- 
+  const { userId: extractId } = await decodeJwt(accessToken);
+  const userId = req.params.userId ?? extractId;
 
-  const q = `SELECT u.userName , u.userId ,u.profilePicture,f.moment FROM 
+  const q = `SELECT u.userName , u.userId ,u.profilePicture,f.* FROM 
     Follower f 
     join Users u on f.following_id =u.userId
     WHERE  f.follower_id =?`;

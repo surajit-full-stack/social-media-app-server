@@ -35,7 +35,7 @@ export const createChatToken = (user) => {
       profilePicture: user.profilePicture,
     },
     process.env.JWT_CHAT_KEY,
-    { expiresIn: "15s" }
+    { expiresIn: "1m" }
   );
 
   return accessToken;
