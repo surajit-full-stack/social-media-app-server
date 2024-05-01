@@ -9,7 +9,7 @@ export const followingUser = async (req, res) => {
   const followedId = req.params.followingId;
   if (userId == followedId)
     return res.status(500).json("self following is not allowed");
-  const q = "INSERT INTO Follower (follower_id,following_id,id) VALUES (?,?,?)";
+  const q = "INSERT INTO Follower (follower_id,following_id) VALUES (?,?)";
 
   db.query(q, [userId, followedId, uuidv4()], (err, data) => {
     if (err) return res.status(500).json(req);

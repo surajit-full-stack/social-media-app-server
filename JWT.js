@@ -9,7 +9,7 @@ export const createToken = (user) => {
       profilePicture: user.profilePicture,
     },
     process.env.JWT_SECRET_KEY,
-    { expiresIn: "15m" }
+    { expiresIn: 15*60 } //in second
   );
 
   return accessToken;
@@ -35,7 +35,7 @@ export const createChatToken = (user) => {
       profilePicture: user.profilePicture,
     },
     process.env.JWT_CHAT_KEY,
-    { expiresIn: "1m" }
+    { expiresIn: 90 }
   );
 
   return accessToken;

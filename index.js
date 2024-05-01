@@ -7,11 +7,13 @@ import reactionRoute from "./routes/like.js";
 import CommentRoute from "./routes/comment.js";
 import followRouter from "./routes/follower.js";
 import feedRouter from "./routes/feed.js";
+import chatRouter from "./routes/chat.js";
 import cookieParser from "cookie-parser";
 import { db } from "./db.js";
 import dotenv from "dotenv";
 import cors from "cors";
 import { kafkaInit } from "./pub-sub/publisher.js";
+import mongoose from "mongoose";
 dotenv.config();
 const app = express();
 
@@ -36,9 +38,10 @@ app.use("/api/user", reactionRoute);
 app.use("/api/user", CommentRoute);
 app.use("/api/user", followRouter);
 app.use("/api/user", feedRouter);
+app.use("/api/user", chatRouter);
 app.use("/api/user", auth);
 
-server.listen(8000, () => {
+server.listen(8000, async() => {
   db.connect((err) => {
     if (err) {
       console.error("Error connecting to MySQL:", err);
@@ -46,7 +49,16 @@ server.listen(8000, () => {
     }
     console.log("Connected to MySQL database");
   });
-  
+  try {
+  await mongoose.connect(process.env.MONGO_URL_CHAT);
+    console.log('connected to mongo in main server')
+
+    
+ 
+  } catch (error) {
+    console.log('error.message', error.message)
+  }
+
   // connect kafka
   kafkaInit();
 
