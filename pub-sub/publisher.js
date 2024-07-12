@@ -46,6 +46,7 @@ export const kafkaInit = async () => {
 
   } catch (error) {
     console.log("Kafka Producer Error: ", error);
+    throw error
   }
 };
 

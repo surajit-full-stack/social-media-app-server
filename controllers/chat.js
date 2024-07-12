@@ -42,9 +42,9 @@ export const getChats = async (req, res) => {
       .skip(Number(skip))
       .toArray();
 
-  
     return res.status(200).json({ msg: docs });
   } catch (error) {
     return res.status(500).json({ msg: error.message });
   }
 };
+

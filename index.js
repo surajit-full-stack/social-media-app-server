@@ -41,7 +41,7 @@ app.use("/api/user", feedRouter);
 app.use("/api/user", chatRouter);
 app.use("/api/user", auth);
 
-server.listen(8000, async() => {
+server.listen(8000, async () => {
   db.connect((err) => {
     if (err) {
       console.error("Error connecting to MySQL:", err);
@@ -50,17 +50,14 @@ server.listen(8000, async() => {
     console.log("Connected to MySQL database");
   });
   try {
-  await mongoose.connect(process.env.MONGO_URL_CHAT);
-    console.log('connected to mongo in main server')
-
-    
- 
+    await mongoose.connect(process.env.MONGO_URL_CHAT);
+    console.log("connected to mongo in main server");
   } catch (error) {
-    console.log('error.message', error.message)
+    console.log("error.message", error.message);
   }
 
   // connect kafka
-  kafkaInit();
+  await kafkaInit();
 
   console.log("server running on 8000");
 });
