@@ -42,13 +42,14 @@ export const getConversationId = async (req, res) => {
 
       const { profilePicture: friendDp, userId: friendUserId } =
         await getFriendDp();
-
+const conversation_id=uuidv4()
       const dpObject = {};
       // first user
       dpObject[userName] = {
         profilePicture,
         userId,
         userName,
+        conversation_id
       };
 
       // second user
@@ -56,11 +57,12 @@ export const getConversationId = async (req, res) => {
         profilePicture: friendDp,
         userId: friendUserId,
         userName: friendId,
+        conversation_id
       };
 
       const newConversation = new Conversation({
         participants: [userName, friendId],
-        conversation_id: uuidv4(),
+        conversation_id ,
         participants_data: dpObject, // Assign dpObject directly
       });
 
