@@ -9,7 +9,8 @@ export const createToken = (user) => {
       profilePicture: user.profilePicture,
     },
     process.env.JWT_SECRET_KEY,
-    { expiresIn: 15*60 } //in second
+    { expiresIn: "21d" }
+    //in second
   );
 
   return accessToken;
@@ -22,7 +23,7 @@ export const createRefreashToken = (user) => {
       profilePicture: user.profilePicture,
     },
     process.env.JWT_REFREASH_KEY,
-    { expiresIn: "10d" }
+    { expiresIn: "86d" }
   );
 
   return accessToken;

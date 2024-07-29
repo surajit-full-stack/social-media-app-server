@@ -8,6 +8,7 @@ import CommentRoute from "./routes/comment.js";
 import followRouter from "./routes/follower.js";
 import feedRouter from "./routes/feed.js";
 import chatRouter from "./routes/chat.js";
+import notificationRouter from "./routes/notification.js";
 import cookieParser from "cookie-parser";
 import { db } from "./db.js";
 import dotenv from "dotenv";
@@ -39,6 +40,7 @@ app.use("/api/user", CommentRoute);
 app.use("/api/user", followRouter);
 app.use("/api/user", feedRouter);
 app.use("/api/user", chatRouter);
+app.use("/api/user", notificationRouter);
 app.use("/api/user", auth);
 
 server.listen(8000, async () => {

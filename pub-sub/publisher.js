@@ -1,4 +1,4 @@
-import { Kafka } from "kafkajs";
+import { Kafka,logLevel } from "kafkajs";
 import moment from "moment";
 import fs from "fs";
 import dotenv from "dotenv";
@@ -21,6 +21,7 @@ dotenv.config();
 const kafka = new Kafka({
   clientId: "api-server",
   brokers: [process.env.KAFKA_BROKER],
+  logLevel:logLevel.ERROR
 });
 const admin = kafka.admin();
 const producer = kafka.producer();
